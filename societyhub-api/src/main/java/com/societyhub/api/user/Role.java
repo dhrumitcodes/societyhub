@@ -1,3 +1,7 @@
 package com.societyhub.api.user;
 
-public enum Role { USER, ADMIN }
+public enum Role {
+    ADMIN,
+    SOCIETY_ADMIN,
+    MEMBER
+}
