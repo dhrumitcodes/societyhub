@@ -35,15 +35,15 @@ public class SocietyController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('COLLEGE_ADMIN')")
+    @PreAuthorize("@societySecurity.isSocietyOfficerOrAdmin(#id)")
     public ResponseEntity<SocietyResponse> updateSociety(
             @PathVariable Long id,
             @Valid @RequestBody CreateSocietyRequest request) {
         return ResponseEntity.ok(societyService.updateSociety(id, request));
     }
 
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('COLLEGE_ADMIN')")
+ @DeleteMapping("/{id}")
+    @PreAuthorize("@societySecurity.isSocietyPresident(#id)")
     public ResponseEntity<Void> deleteSociety(@PathVariable Long id) {
         societyService.deleteSociety(id);
         return ResponseEntity.noContent().build();

@@ -1,7 +1,8 @@
 package com.societyhub.api.user;
 
 public enum Role {
-    ADMIN,
+    STUDENT,
+    MEMBER,
     SOCIETY_ADMIN,
-    MEMBER
+    COLLEGE_ADMIN
 }
