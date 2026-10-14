@@ -4,9 +4,11 @@ import com.societyhub.api.membership.Membership;
 import com.societyhub.api.membership.MembershipRepository;
 import com.societyhub.api.membership.SocietyRole;
 import com.societyhub.api.user.User;
+import com.societyhub.api.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -17,6 +19,7 @@ import java.util.Optional;
 public class SocietySecurityEvaluator {
 
     private final MembershipRepository membershipRepository;
+    private final UserRepository userRepository;
 
     private static final List<SocietyRole> OFFICER_ROLES = List.of(
             SocietyRole.PRESIDENT,
@@ -26,12 +29,13 @@ public class SocietySecurityEvaluator {
     );
 
     public boolean isSocietyOfficerOrAdmin(Long societyId) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof User user)) {
+        User user = getCurrentUser();
+        if (user == null) {
             return false;
         }
 
-        if (user.getRole().name().equals("COLLEGE_ADMIN")) {
+        // College Admin global override
+        if (user.getRole() != null && user.getRole().name().equals("COLLEGE_ADMIN")) {
             return true;
         }
 
@@ -40,12 +44,12 @@ public class SocietySecurityEvaluator {
     }
 
     public boolean isSocietyPresident(Long societyId) {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof User user)) {
+        User user = getCurrentUser();
+        if (user == null) {
             return false;
         }
 
-        if (user.getRole().name().equals("COLLEGE_ADMIN")) {
+        if (user.getRole() != null && user.getRole().name().equals("COLLEGE_ADMIN")) {
             return true;
         }
 
@@ -53,16 +57,25 @@ public class SocietySecurityEvaluator {
         return membershipOpt.map(m -> m.getSocietyRole() == SocietyRole.PRESIDENT).orElse(false);
     }
 
-    public boolean isSocietyMember(Long societyId) {
+    private User getCurrentUser() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof User user)) {
-            return false;
+        if (auth == null || !auth.isAuthenticated()) {
+            return null;
         }
 
-        if (user.getRole().name().equals("COLLEGE_ADMIN")) {
-            return true;
+        Object principal = auth.getPrincipal();
+        String email = null;
+
+        if (principal instanceof UserDetails) {
+            email = ((UserDetails) principal).getUsername();
+        } else if (principal instanceof String) {
+            email = (String) principal;
         }
 
-        return membershipRepository.existsByUserIdAndSocietyId(user.getId(), societyId);
+        if (email == null) {
+            return null;
+        }
+
+        return userRepository.findByEmail(email).orElse(null);
     }
 }

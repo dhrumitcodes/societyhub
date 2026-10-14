@@ -17,7 +17,7 @@ import java.util.List;
 public class MembershipController {
 
     private final MembershipService membershipService;
-    
+
     @PostMapping
     @PreAuthorize("@societySecurity.isSocietyOfficerOrAdmin(#societyId)")
     public ResponseEntity<MembershipResponse> addMember(
