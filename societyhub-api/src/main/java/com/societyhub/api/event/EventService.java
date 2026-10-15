@@ -5,13 +5,13 @@ import com.societyhub.api.event.dto.EventResponse;
 import com.societyhub.api.society.Society;
 import com.societyhub.api.society.SocietyRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -41,13 +41,13 @@ public class EventService {
         return EventResponse.fromEntity(eventRepository.save(event));
     }
 
-    public List<EventResponse> getEventsBySociety(Long societyId) {
-        if (!societyRepository.existsById(societyId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Society not found");
-        }
-        return eventRepository.findBySocietyId(societyId).stream()
-                .map(EventResponse::fromEntity)
-                .collect(Collectors.toList());
+    public Page<EventResponse> getFilteredEvents(Long societyId, String search, String location, Boolean upcoming, Pageable pageable) {
+        Specification<Event> spec = Specification.where(EventSpecification.hasSocietyId(societyId))
+                .and(EventSpecification.titleContains(search))
+                .and(EventSpecification.locationContains(location))
+                .and(EventSpecification.isUpcoming(upcoming));
+
+        return eventRepository.findAll(spec, pageable).map(EventResponse::fromEntity);
     }
 
     public EventResponse getEventById(Long eventId) {

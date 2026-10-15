@@ -31,6 +31,10 @@ public class Event {
 
     private String location;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer capacity = 50;
+
     @Column(name = "start_time", nullable = false)
     private LocalDateTime startTime;
 
