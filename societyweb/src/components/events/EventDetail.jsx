@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { eventApi } from '../../api/eventApi';
 
+
 export default function EventDetail() {
     const { societyId, eventId } = useParams();
     const [event, setEvent] = useState(null);
