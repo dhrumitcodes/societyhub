@@ -1,5 +1,6 @@
 package com.societyhub.api.society;
 
+import com.societyhub.api.common.exception.ResourceNotFoundException;
 import com.societyhub.api.society.dto.CreateSocietyRequest;
 import com.societyhub.api.society.dto.SocietyResponse;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +18,7 @@ public class SocietyService {
     @Transactional
     public SocietyResponse createSociety(CreateSocietyRequest request) {
         if (societyRepository.existsByName(request.getName())) {
-            throw new IllegalArgumentException("Society with name '" + request.getName() + "' already exists.");
+            throw new IllegalArgumentException("A society named '" + request.getName() + "' already exists.");
         }
 
         Society society = Society.builder()
@@ -26,40 +27,41 @@ public class SocietyService {
                 .category(request.getCategory())
                 .build();
 
-        Society saved = societyRepository.save(society);
-        return mapToResponse(saved);
+        return mapToResponse(societyRepository.save(society));
     }
 
+    @Transactional(readOnly = true)
     public List<SocietyResponse> getAllSocieties() {
         return societyRepository.findAll().stream()
                 .map(this::mapToResponse)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public SocietyResponse getSocietyById(Long id) {
-        Society society = societyRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Society not found with id: " + id));
-        return mapToResponse(society);
+        return mapToResponse(find(id));
     }
 
     @Transactional
     public SocietyResponse updateSociety(Long id, CreateSocietyRequest request) {
-        Society society = societyRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Society not found with id: " + id));
-
+        Society society = find(id);
         society.setName(request.getName());
         society.setDescription(request.getDescription());
         society.setCategory(request.getCategory());
-
         return mapToResponse(societyRepository.save(society));
     }
 
     @Transactional
     public void deleteSociety(Long id) {
         if (!societyRepository.existsById(id)) {
-            throw new RuntimeException("Society not found with id: " + id);
+            throw new ResourceNotFoundException("Society not found");
         }
         societyRepository.deleteById(id);
+    }
+
+    private Society find(Long id) {
+        return societyRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Society not found"));
     }
 
     private SocietyResponse mapToResponse(Society society) {

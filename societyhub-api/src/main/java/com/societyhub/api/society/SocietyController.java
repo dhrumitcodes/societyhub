@@ -19,7 +19,7 @@ public class SocietyController {
     private final SocietyService societyService;
 
     @PostMapping
-    @PreAuthorize("hasRole('COLLEGE_ADMIN')")
+    @PreAuthorize("@societySecurity.isCollegeAdmin()")
     public ResponseEntity<SocietyResponse> createSociety(@Valid @RequestBody CreateSocietyRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(societyService.createSociety(request));
     }
@@ -42,7 +42,7 @@ public class SocietyController {
         return ResponseEntity.ok(societyService.updateSociety(id, request));
     }
 
- @DeleteMapping("/{id}")
+    @DeleteMapping("/{id}")
     @PreAuthorize("@societySecurity.isSocietyPresident(#id)")
     public ResponseEntity<Void> deleteSociety(@PathVariable Long id) {
         societyService.deleteSociety(id);

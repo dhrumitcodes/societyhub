@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import LeafField from '../components/common/LeafField';
 import Logo from '../components/common/Logo';
@@ -40,14 +40,14 @@ export default function Login() {
             </section>
             <form className="login-card" onSubmit={handleLogin}>
                 <h2>Sign in</h2>
-                <p className="muted">For office bearers of a society.</p>
+                <p className="muted">Welcome back. Sign in to your account.</p>
                 <label htmlFor="em">College email</label>
                 <input id="em" type="email" placeholder="name@college.edu" value={email} onChange={(e) => setEmail(e.target.value)} required />
                 <label htmlFor="pw">Password</label>
                 <input id="pw" type="password" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} required />
                 {error && <p className="form-error" role="alert">{error}</p>}
                 <button className="btn-primary" type="submit" disabled={busy}>{busy ? 'Signing in...' : 'Sign in'}</button>
-                <p className="login-foot muted">Student looking to join? Register from your society's page.</p>
+                <p className="login-foot muted">New here? <Link className="amber-link" to="/register">Create an account</Link></p>
             </form>
         </div>
     );

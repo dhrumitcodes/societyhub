@@ -20,5 +20,6 @@ export const eventApi = {
 
     registerForEvent: async (eventId) => (await axiosClient.post(`/events/${eventId}/register`)).data,
     cancelRegistration: async (eventId) => { await axiosClient.delete(`/events/${eventId}/register`); },
+    getMyRegistrations: async () => (await axiosClient.get('/events/my-registrations')).data,
     getAttendees: async (eventId) => (await axiosClient.get(`/events/${eventId}/attendees`)).data,
 };

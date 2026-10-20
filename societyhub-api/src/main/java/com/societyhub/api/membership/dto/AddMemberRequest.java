@@ -6,7 +6,9 @@ import lombok.Data;
 
 @Data
 public class AddMemberRequest {
-    @NotNull(message = "User ID is required")
+
+    private String email;
+
     private Long userId;
 
     @NotNull(message = "Society role is required")

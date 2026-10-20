@@ -27,14 +27,16 @@ public class SocietySecurityEvaluator {
             SocietyRole.SECRETARY,
             SocietyRole.TREASURER
     );
+    public boolean isCollegeAdmin() {
+        User user = getCurrentUser();
+        return user != null && user.getRole() != null && user.getRole().name().equals("COLLEGE_ADMIN");
+    }
 
     public boolean isSocietyOfficerOrAdmin(Long societyId) {
         User user = getCurrentUser();
         if (user == null) {
             return false;
         }
-
-        // College Admin global override
         if (user.getRole() != null && user.getRole().name().equals("COLLEGE_ADMIN")) {
             return true;
         }

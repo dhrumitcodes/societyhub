@@ -7,8 +7,8 @@ import Loader from '../components/common/Loader';
 import ErrorMessage from '../components/common/ErrorMessage';
 
 export default function EventDetailPage() {
-    const { societyId, membership } = useOutletContext();
-    const { eventId } = useParams();
+    const { eventsPath } = useOutletContext();
+    const { societyId, eventId } = useParams();
     const { user } = useAuth();
     const navigate = useNavigate();
     const [event, setEvent] = useState(null);
@@ -17,6 +17,7 @@ export default function EventDetailPage() {
     const [actionError, setActionError] = useState('');
     const [busy, setBusy] = useState(false);
 
+    const membership = user.memberships.find((m) => String(m.societyId) === societyId);
     const canManage = membership ? membership.canManage : user.role === 'COLLEGE_ADMIN';
 
     const load = useCallback(async () => {
@@ -54,7 +55,7 @@ export default function EventDetailPage() {
         setBusy(true);
         try {
             await eventApi.deleteEvent(societyId, eventId);
-            navigate(`/societies/${societyId}/events`, { replace: true });
+            navigate(eventsPath, { replace: true });
         } catch (e) {
             setError(e);
             setBusy(false);
@@ -70,7 +71,7 @@ export default function EventDetailPage() {
 
     return (
         <>
-            <Link className="link" to={`/societies/${societyId}/events`}>Back to events</Link>
+            <Link className="link" to={eventsPath}>Back to events</Link>
             <div className="page-head" style={{ marginTop: 12 }}>
                 <h1 className="greet">{event.title}</h1>
                 {canManage && (

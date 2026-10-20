@@ -1,6 +1,9 @@
 export const roleLabel = (r) =>
     r ? r.toLowerCase().split('_').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ') : '';
 
+export const ROLE_OPTIONS = ['PRESIDENT', 'VICE_PRESIDENT', 'SECRETARY', 'TREASURER', 'MEMBER'];
+
+
 export const NAV = [
     { label: 'Dashboard', to: 'overview', icon: 'dash' },
     { label: 'Events', to: 'events', icon: 'cal' },

@@ -6,7 +6,6 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(() => Boolean(localStorage.getItem('token')));
-
     useEffect(() => {
         if (!localStorage.getItem('token')) return;
         let cancelled = false;
@@ -24,12 +23,19 @@ export function AuthProvider({ children }) {
         return me;
     }, []);
 
+    const register = useCallback(async (payload) => {
+        await authApi.register(payload); // also stores the token
+        const me = await authApi.me();
+        setUser(me);
+        return me;
+    }, []);
+
     const logout = useCallback(() => {
         authApi.logout();
         setUser(null);
     }, []);
 
-    const value = useMemo(() => ({ user, loading, login, logout }), [user, loading, login, logout]);
+    const value = useMemo(() => ({ user, loading, login, register, logout }), [user, loading, login, register, logout]);
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

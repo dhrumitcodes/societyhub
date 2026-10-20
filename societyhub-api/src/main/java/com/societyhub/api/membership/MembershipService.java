@@ -1,5 +1,6 @@
 package com.societyhub.api.membership;
 
+import com.societyhub.api.common.exception.ResourceNotFoundException;
 import com.societyhub.api.membership.dto.AddMemberRequest;
 import com.societyhub.api.membership.dto.MembershipResponse;
 import com.societyhub.api.society.Society;
@@ -22,15 +23,14 @@ public class MembershipService {
 
     @Transactional
     public MembershipResponse addMember(Long societyId, AddMemberRequest request) {
-        if (membershipRepository.existsByUserIdAndSocietyId(request.getUserId(), societyId)) {
-            throw new IllegalArgumentException("User is already a member of this society.");
+        User user = resolveUser(request);
+
+        if (membershipRepository.existsByUserIdAndSocietyId(user.getId(), societyId)) {
+            throw new IllegalArgumentException("This person is already a member of the society.");
         }
 
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + request.getUserId()));
-
         Society society = societyRepository.findById(societyId)
-                .orElseThrow(() -> new RuntimeException("Society not found with id: " + societyId));
+                .orElseThrow(() -> new ResourceNotFoundException("Society not found"));
 
         Membership membership = Membership.builder()
                 .user(user)
@@ -41,6 +41,7 @@ public class MembershipService {
         return mapToResponse(membershipRepository.save(membership));
     }
 
+    @Transactional(readOnly = true)
     public List<MembershipResponse> getSocietyMembers(Long societyId) {
         return membershipRepository.findBySocietyId(societyId).stream()
                 .map(this::mapToResponse)
@@ -49,19 +50,46 @@ public class MembershipService {
 
     @Transactional
     public MembershipResponse updateMemberRole(Long societyId, Long userId, SocietyRole newRole) {
-        Membership membership = membershipRepository.findByUserIdAndSocietyId(userId, societyId)
-                .orElseThrow(() -> new RuntimeException("Membership not found for user in this society."));
-
+        Membership membership = find(societyId, userId);
+        ensureNotLastPresident(societyId, membership, newRole);
         membership.setSocietyRole(newRole);
         return mapToResponse(membershipRepository.save(membership));
     }
 
     @Transactional
     public void removeMember(Long societyId, Long userId) {
-        Membership membership = membershipRepository.findByUserIdAndSocietyId(userId, societyId)
-                .orElseThrow(() -> new RuntimeException("Membership not found for user in this society."));
-
+        Membership membership = find(societyId, userId);
+        ensureNotLastPresident(societyId, membership, null);
         membershipRepository.delete(membership);
+    }
+
+    private Membership find(Long societyId, Long userId) {
+        return membershipRepository.findByUserIdAndSocietyId(userId, societyId)
+                .orElseThrow(() -> new ResourceNotFoundException("That person is not a member of this society"));
+    }
+
+    private User resolveUser(AddMemberRequest request) {
+        if (request.getEmail() != null && !request.getEmail().isBlank()) {
+            String email = request.getEmail().trim();
+            return userRepository.findByEmail(email)
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "No account found for " + email + ". They need to register first."));
+        }
+        if (request.getUserId() != null) {
+            return userRepository.findById(request.getUserId())
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        }
+        throw new IllegalArgumentException("Provide the member's email.");
+    }
+    private void ensureNotLastPresident(Long societyId, Membership target, SocietyRole newRole) {
+        if (target.getSocietyRole() == SocietyRole.PRESIDENT && newRole != SocietyRole.PRESIDENT) {
+            long presidents = membershipRepository.findBySocietyId(societyId).stream()
+                    .filter(m -> m.getSocietyRole() == SocietyRole.PRESIDENT)
+                    .count();
+            if (presidents <= 1) {
+                throw new IllegalArgumentException("A society must have at least one president. Make someone else president first.");
+            }
+        }
     }
 
     private MembershipResponse mapToResponse(Membership membership) {

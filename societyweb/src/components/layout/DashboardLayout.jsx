@@ -49,6 +49,7 @@ export default function DashboardLayout() {
                             <Icon name={n.icon} />{n.label}
                         </NavLink>
                     ))}
+                    <NavLink to="/discover" className="nav-item"><Icon name="search" />Explore</NavLink>
                 </nav>
                 <button type="button" className="nav-item signout" onClick={() => { logout(); navigate('/login', { replace: true }); }}>
                     <Icon name="out" />Sign out
@@ -63,7 +64,7 @@ export default function DashboardLayout() {
                         <span className="avatar" title={user.fullName}>{initials}</span>
                     </div>
                 </header>
-                <main><Outlet context={{ societyId, membership }} /></main>
+                <main><Outlet context={{ societyId, membership, eventsPath: `/societies/${societyId}/events` }} /></main>
             </div>
         </div>
     );
