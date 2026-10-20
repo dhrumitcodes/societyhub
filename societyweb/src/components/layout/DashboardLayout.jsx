@@ -1,53 +1,70 @@
-import { Outlet, NavLink, useParams } from 'react-router-dom';
+import { NavLink, Navigate, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { NAV, roleLabel } from '../../utils/roles';
+import Icon from '../common/Icon';
+import Logo from '../common/Logo';
 
 export default function DashboardLayout() {
-    const { societyId = '1' } = useParams();
+    const { user, logout } = useAuth();
+    const { societyId } = useParams();
+    const navigate = useNavigate();
+    const { pathname } = useLocation();
+
+    const membership = user.memberships.find((m) => String(m.societyId) === societyId);
+    const isAdmin = user.role === 'COLLEGE_ADMIN';
+    if (!membership && !isAdmin) return <Navigate to="/" replace />;
+
+    const section = pathname.split('/')[3] || 'overview';
+    const current = NAV.find((n) => n.to === section) ?? NAV[0];
+    const societyName = membership?.societyName ?? 'Society';
+    const initials = user.fullName.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+    const mark = societyName.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+    const roleText = membership ? roleLabel(membership.role) : 'College Admin';
 
     return (
-        <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f8f9fa', fontFamily: 'system-ui, sans-serif' }}>
-
-            <aside style={{ width: '260px', backgroundColor: '#ffffff', borderRight: '1px solid #e5e7eb', padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ width: '40px', height: '40px', backgroundColor: '#111827', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '20px' }}>
-                        📅
-                    </div>
-                    <div>
-                        <h3 style={{ fontSize: '15px', fontWeight: '600', margin: 0, color: '#111827' }}>SocietyHub</h3>
-                        <span style={{ fontSize: '12px', color: '#6b7280' }}>College club workspace</span>
-                    </div>
+        <div className="app">
+            <aside className="sidebar">
+                <div className="side-logo"><Logo /> Canopy</div>
+                <div className="society">
+                    <span className="society-mark">{mark}</span>
+                    <span>
+                        {user.memberships.length > 1 ? (
+                            <select
+                                className="switcher"
+                                aria-label="Switch society"
+                                value={societyId}
+                                onChange={(e) => navigate(`/societies/${e.target.value}/${section}`)}
+                            >
+                                {user.memberships.map((m) => <option key={m.societyId} value={m.societyId}>{m.societyName}</option>)}
+                            </select>
+                        ) : (
+                            <strong>{societyName}</strong>
+                        )}
+                        <small>{roleText}</small>
+                    </span>
                 </div>
-
-                <div style={{ padding: '10px 12px', backgroundColor: '#f3f4f6', borderRadius: '8px', fontSize: '14px', fontWeight: '500', color: '#374151', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span>👥</span> Tech Society
-                </div>
-
-                <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <span style={{ fontSize: '11px', fontWeight: '600', color: '#9ca3af', padding: '0 12px 6px', textTransform: 'uppercase' }}>Workspace</span>
-                    <NavLink to={`/societies/${societyId}/overview`} style={navLinkStyle}>Overview</NavLink>
-                    <NavLink to={`/societies/${societyId}/events`} style={navLinkStyle}>Events</NavLink>
-                    <NavLink to={`/societies/${societyId}/members`} style={navLinkStyle}>Members</NavLink>
-                    <NavLink to={`/societies/${societyId}/registrations`} style={navLinkStyle}>Registrations</NavLink>
-                    <NavLink to={`/societies/${societyId}/roles`} style={navLinkStyle}>Roles</NavLink>
-                    <NavLink to={`/societies/${societyId}/settings`} style={navLinkStyle}>Settings</NavLink>
+                <nav aria-label="Main">
+                    {NAV.map((n) => (
+                        <NavLink key={n.to} to={`/societies/${societyId}/${n.to}`} className={({ isActive }) => `nav-item ${isActive ? 'on' : ''}`}>
+                            <Icon name={n.icon} />{n.label}
+                        </NavLink>
+                    ))}
                 </nav>
+                <button type="button" className="nav-item signout" onClick={() => { logout(); navigate('/login', { replace: true }); }}>
+                    <Icon name="out" />Sign out
+                </button>
             </aside>
 
-            <main style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
-                <Outlet />
-            </main>
+            <div className="content">
+                <header className="topbar">
+                    <div className="crumbs">{societyName} / <strong>{current.label}</strong></div>
+                    <div className="top-right">
+                        <span className="role-chip">{roleText}</span>
+                        <span className="avatar" title={user.fullName}>{initials}</span>
+                    </div>
+                </header>
+                <main><Outlet context={{ societyId, membership }} /></main>
+            </div>
         </div>
     );
 }
-
-const navLinkStyle = ({ isActive }) => ({
-    display: 'block',
-    padding: '10px 12px',
-    borderRadius: '6px',
-    textDecoration: 'none',
-    color: isActive ? '#111827' : '#4b5563',
-    backgroundColor: isActive ? '#e5e7eb' : 'transparent',
-    fontWeight: isActive ? '600' : '500',
-    fontSize: '14px',
-    transition: 'background-color 0.2s'
-});

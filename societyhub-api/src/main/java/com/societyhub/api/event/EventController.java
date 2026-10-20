@@ -1,5 +1,6 @@
 package com.societyhub.api.event;
 
+import com.societyhub.api.common.exception.ResourceNotFoundException;
 import com.societyhub.api.event.dto.EventRequest;
 import com.societyhub.api.event.dto.EventResponse;
 import jakarta.validation.Valid;
@@ -50,7 +51,7 @@ public class EventController {
     public ResponseEntity<EventResponse> getEventById(
             @PathVariable Long societyId,
             @PathVariable Long eventId) {
-        return ResponseEntity.ok(eventService.getEventById(eventId));
+        return ResponseEntity.ok(findInSociety(societyId, eventId));
     }
 
     @PutMapping("/societies/{societyId}/events/{eventId}")
@@ -59,6 +60,7 @@ public class EventController {
             @PathVariable Long societyId,
             @PathVariable Long eventId,
             @Valid @RequestBody EventRequest request) {
+        findInSociety(societyId, eventId);
         return ResponseEntity.ok(eventService.updateEvent(eventId, request));
     }
 
@@ -67,7 +69,15 @@ public class EventController {
     public ResponseEntity<Void> deleteEvent(
             @PathVariable Long societyId,
             @PathVariable Long eventId) {
+        findInSociety(societyId, eventId);
         eventService.deleteEvent(eventId);
         return ResponseEntity.noContent().build();
+    }
+    private EventResponse findInSociety(Long societyId, Long eventId) {
+        EventResponse event = eventService.getEventById(eventId);
+        if (!societyId.equals(event.getSocietyId())) {
+            throw new ResourceNotFoundException("Event not found");
+        }
+        return event;
     }
 }

@@ -4,8 +4,6 @@ import com.societyhub.api.event.EventRegistration;
 import lombok.Builder;
 import lombok.Data;
 
-import java.time.LocalDateTime;
-
 @Data
 @Builder
 public class RegistrationResponse {
@@ -14,16 +12,16 @@ public class RegistrationResponse {
     private String eventTitle;
     private Long userId;
     private String userEmail;
-    private LocalDateTime registeredAt;
+    private String userFullName;
 
-    public static RegistrationResponse fromEntity(EventRegistration reg) {
+    public static RegistrationResponse fromEntity(EventRegistration r) {
         return RegistrationResponse.builder()
-                .id(reg.getId())
-                .eventId(reg.getEvent().getId())
-                .eventTitle(reg.getEvent().getTitle())
-                .userId(reg.getUser().getId())
-                .userEmail(reg.getUser().getEmail())
-                .registeredAt(reg.getRegisteredAt())
+                .id(r.getId())
+                .eventId(r.getEvent().getId())
+                .eventTitle(r.getEvent().getTitle())
+                .userId(r.getUser().getId())
+                .userEmail(r.getUser().getEmail())
+                .userFullName(r.getUser().getFullName())
                 .build();
     }
 }

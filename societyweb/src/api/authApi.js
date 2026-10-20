@@ -2,22 +2,18 @@ import axiosClient from './axiosClient';
 
 export const authApi = {
     login: async (credentials) => {
-        const response = await axiosClient.post('/auth/login', credentials);
-        if (response.data.token) {
-            localStorage.setItem('token', response.data.token);
-        }
-        return response.data;
+        const { data } = await axiosClient.post('/auth/login', credentials);
+        if (data.token) localStorage.setItem('token', data.token);
+        return data;
     },
 
     register: async (userData) => {
-        const response = await axiosClient.post('/auth/register', userData);
-        if (response.data.token) {
-            localStorage.setItem('token', response.data.token);
-        }
-        return response.data;
+        const { data } = await axiosClient.post('/auth/register', userData);
+        if (data.token) localStorage.setItem('token', data.token);
+        return data;
     },
 
-    logout: () => {
-        localStorage.removeItem('token');
-    }
+    me: async () => (await axiosClient.get('/users/me')).data,
+
+    logout: () => localStorage.removeItem('token'),
 };
