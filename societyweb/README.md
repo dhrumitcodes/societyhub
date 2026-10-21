@@ -1,16 +1,44 @@
-# React + Vite
+# SocietyHub
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A multi-tenant platform for college societies: sign-up, join requests, events with registration, announcements and role-based dashboards.
 
-Currently, two official plugins are available:
+- `societyhub-api`: Spring Boot 3, PostgreSQL, Flyway, JWT
+- `societyweb`: React + Vite
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Run it locally
 
-## React Compiler
+### 1. Database
+Create a PostgreSQL database named `societyhub_db`. Flyway creates the tables on first start.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 2. Backend
+Create `societyhub-api/src/main/resources/application-local.properties` (it is gitignored):
 
-## Expanding the ESLint configuration
+```
+spring.datasource.url=jdbc:postgresql://localhost:5432/societyhub_db
+spring.datasource.username=postgres
+spring.datasource.password=YOUR_PASSWORD
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Run `SocietyHubApplication` from IntelliJ, or `./mvnw spring-boot:run -Dspring-boot.run.profiles=local`. It listens on http://localhost:8080.
+
+### 3. Frontend
+```
+cd societyweb
+cp .env.example .env
+npm install
+npm run dev
+```
+Open http://localhost:5173.
+
+## First admin
+Register an account in the app, then promote it in the database:
+
+```sql
+UPDATE users SET role = 'COLLEGE_ADMIN' WHERE email = 'you@college.edu';
+```
+
+Sign in again. The admin can create societies from the Societies page and then add a president from that society's Members page.
+
+## Roles
+- Global: `STUDENT`, `MEMBER`, `SOCIETY_ADMIN`, `COLLEGE_ADMIN`
+- Per society: `PRESIDENT`, `VICE_PRESIDENT`, `SECRETARY`, `TREASURER`, `MEMBER`
