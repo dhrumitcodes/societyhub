@@ -37,7 +37,7 @@ public class AnnouncementController {
     public ResponseEntity<Void> deleteAnnouncement(
             @PathVariable Long societyId,
             @PathVariable Long announcementId) {
-        announcementService.deleteAnnouncement(announcementId);
+        announcementService.deleteAnnouncement(societyId, announcementId);
         return ResponseEntity.noContent().build();
     }
 }

@@ -2,16 +2,14 @@ package com.societyhub.api.announcement;
 
 import com.societyhub.api.announcement.dto.AnnouncementRequest;
 import com.societyhub.api.announcement.dto.AnnouncementResponse;
+import com.societyhub.api.common.exception.ResourceNotFoundException;
 import com.societyhub.api.society.Society;
 import com.societyhub.api.society.SocietyRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,7 +21,7 @@ public class AnnouncementService {
     @Transactional
     public AnnouncementResponse createAnnouncement(Long societyId, AnnouncementRequest request) {
         Society society = societyRepository.findById(societyId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Society not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Society not found"));
 
         Announcement announcement = Announcement.builder()
                 .society(society)
@@ -35,20 +33,22 @@ public class AnnouncementService {
         return AnnouncementResponse.fromEntity(announcementRepository.save(announcement));
     }
 
+    @Transactional(readOnly = true)
     public List<AnnouncementResponse> getSocietyAnnouncements(Long societyId) {
         if (!societyRepository.existsById(societyId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Society not found");
+            throw new ResourceNotFoundException("Society not found");
         }
         return announcementRepository.findBySocietyIdOrderByCreatedAtDesc(societyId).stream()
                 .map(AnnouncementResponse::fromEntity)
-                .collect(Collectors.toList());
+                .toList();
     }
-
     @Transactional
-    public void deleteAnnouncement(Long announcementId) {
-        if (!announcementRepository.existsById(announcementId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Announcement not found");
+    public void deleteAnnouncement(Long societyId, Long announcementId) {
+        Announcement announcement = announcementRepository.findById(announcementId)
+                .orElseThrow(() -> new ResourceNotFoundException("Announcement not found"));
+        if (!announcement.getSociety().getId().equals(societyId)) {
+            throw new ResourceNotFoundException("Announcement not found");
         }
-        announcementRepository.deleteById(announcementId);
+        announcementRepository.delete(announcement);
     }
 }

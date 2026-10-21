@@ -3,10 +3,12 @@ export const roleLabel = (r) =>
 
 export const ROLE_OPTIONS = ['PRESIDENT', 'VICE_PRESIDENT', 'SECRETARY', 'TREASURER', 'MEMBER'];
 
+export const PRIORITY_OPTIONS = ['LOW', 'NORMAL', 'HIGH'];
 
 export const NAV = [
     { label: 'Dashboard', to: 'overview', icon: 'dash' },
     { label: 'Events', to: 'events', icon: 'cal' },
+    { label: 'Announcements', to: 'announcements', icon: 'bell' },
     { label: 'Members', to: 'members', icon: 'users' },
 ];
 

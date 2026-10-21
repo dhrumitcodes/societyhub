@@ -11,6 +11,7 @@ import EventListPage from '../pages/EventListPage';
 import EventDetailPage from '../pages/EventDetailPage';
 import EventFormPage from '../pages/EventFormPage';
 import MembersPage from '../pages/MembersPage';
+import AnnouncementsPage from '../pages/AnnouncementsPage';
 import SocietyDashboard from '../pages/admin/SocietyDashboard';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import ExploreLayout from '../components/layout/ExploreLayout';
@@ -49,6 +50,7 @@ export default function AppRoutes() {
                             <Route path="events/:eventId" element={<EventDetailPage />} />
                             <Route path="events/:eventId/edit" element={<EventFormPage />} />
                             <Route path="members" element={<MembersPage />} />
+                            <Route path="announcements" element={<AnnouncementsPage />} />
                         </Route>
                     </Route>
 

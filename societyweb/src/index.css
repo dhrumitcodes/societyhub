@@ -142,3 +142,11 @@ td { padding: 12px 12px 12px 0; border-top: 1px solid #e7ebe3; }
 .inline-form label { display: block; margin: 14px 0 6px; font-weight: 500; color: var(--muted); }
 .inline-form h2 { font-size: 19px; }
 td select.field { height: 36px; min-width: 150px; }
+
+.notice { padding: 18px 0; border-top: 1px solid #e7ebe3; }
+.notice:first-of-type { border-top: 0; padding-top: 4px; }
+.notice-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.notice h3 { margin: 0; font: 700 17px var(--head); }
+.notice p { margin: 8px 0 12px; white-space: pre-wrap; line-height: 1.6; }
+.dash-notice { padding: 12px 0; border-top: 1px solid #e7ebe3; }
+.dash-notice strong { display: block; }

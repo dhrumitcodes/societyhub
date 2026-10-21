@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 import { societyApi } from '../../api/societyApi';
+import { announcementApi } from '../../api/announcementApi';
 import { useAuth } from '../../context/AuthContext';
 import { greeting, roleLabel } from '../../utils/roles';
 import { dayOf, formatDateTime, monthOf } from '../../utils/formatDate';
@@ -13,6 +14,7 @@ export default function SocietyDashboard() {
     const { user } = useAuth();
     const [data, setData] = useState(null);
     const [error, setError] = useState(null);
+    const [notices, setNotices] = useState([]);
 
     const load = useCallback(() => {
         setError(null);
@@ -21,6 +23,10 @@ export default function SocietyDashboard() {
     }, [societyId]);
 
     useEffect(load, [load]);
+
+    useEffect(() => {
+        announcementApi.list(societyId).then((a) => setNotices(a.slice(0, 3))).catch(() => setNotices([]));
+    }, [societyId]);
 
     if (error) return <ErrorMessage error={error} onRetry={load} />;
     if (!data) return <Loader />;
@@ -80,6 +86,21 @@ export default function SocietyDashboard() {
                     )}
                 </section>
             </div>
+
+            <section className="panel">
+                <div className="panel-head">
+                    <h2>Latest announcements</h2>
+                    <Link className="link" to={`/societies/${societyId}/announcements`}>See all</Link>
+                </div>
+                {notices.length === 0 ? (
+                    <p className="muted empty">No announcements yet.</p>
+                ) : notices.map((n) => (
+                    <div className="dash-notice" key={n.id}>
+                        <strong>{n.title}</strong>
+                        <small>{formatDateTime(n.createdAt)}</small>
+                    </div>
+                ))}
+            </section>
         </>
     );
 }

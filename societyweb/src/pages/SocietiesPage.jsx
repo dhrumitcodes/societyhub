@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { societyApi } from '../api/societyApi';
+import { joinRequestApi } from '../api/joinRequestApi';
 import { useAuth } from '../context/AuthContext';
 import Loader from '../components/common/Loader';
 import ErrorMessage from '../components/common/ErrorMessage';
@@ -11,6 +12,8 @@ export default function SocietiesPage() {
     const { user } = useAuth();
     const isAdmin = user.role === 'COLLEGE_ADMIN';
     const [societies, setSocieties] = useState(null);
+    const [pending, setPending] = useState(new Set());
+    const [joinError, setJoinError] = useState('');
     const [error, setError] = useState(null);
     const [form, setForm] = useState(EMPTY);
     const [formError, setFormError] = useState('');
@@ -18,7 +21,12 @@ export default function SocietiesPage() {
 
     const load = useCallback(() => {
         setError(null);
-        societyApi.list().then(setSocieties).catch(setError);
+        Promise.all([societyApi.list(), joinRequestApi.mine()])
+            .then(([list, requests]) => {
+                setSocieties(list);
+                setPending(new Set(requests.filter((r) => r.status === 'PENDING').map((r) => r.societyId)));
+            })
+            .catch(setError);
     }, []);
     useEffect(load, [load]);
 
@@ -36,6 +44,16 @@ export default function SocietiesPage() {
             setFormError(err.response?.data?.message || 'Could not create the society.');
         } finally {
             setBusy(false);
+        }
+    };
+
+    const requestJoin = async (societyId) => {
+        setJoinError('');
+        try {
+            await joinRequestApi.create(societyId);
+            setPending(new Set([...pending, societyId]));
+        } catch (err) {
+            setJoinError(err.response?.data?.message || 'Could not send the request.');
         }
     };
 
@@ -64,6 +82,8 @@ export default function SocietiesPage() {
                 </form>
             )}
 
+            {joinError && <p className="form-error-light" role="alert">{joinError}</p>}
+
             {societies.length === 0 ? <p className="muted empty">No societies yet.</p> : (
                 <div className="card-grid">
                     {societies.map((s) => (
@@ -74,6 +94,9 @@ export default function SocietiesPage() {
                             <div className="actions-row" style={{ marginTop: 'auto' }}>
                                 <Link className="btn-outline-link" to={`/discover?society=${s.id}`}>View events</Link>
                                 {(isAdmin || mine.has(s.id)) && <Link className="btn-solid" to={`/societies/${s.id}/overview`}>Open dashboard</Link>}
+                                {!isAdmin && !mine.has(s.id) && (pending.has(s.id)
+                                    ? <span className="tone warn" style={{ alignSelf: 'center' }}>Request pending</span>
+                                    : <button type="button" className="btn-solid" onClick={() => requestJoin(s.id)}>Request to join</button>)}
                             </div>
                         </article>
                     ))}

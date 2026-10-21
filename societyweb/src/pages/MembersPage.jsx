@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { societyApi } from '../api/societyApi';
+import { joinRequestApi } from '../api/joinRequestApi';
 import { useAuth } from '../context/AuthContext';
 import { formatDate } from '../utils/formatDate';
 import { ROLE_OPTIONS, roleLabel } from '../utils/roles';
@@ -20,6 +21,13 @@ export default function MembersPage() {
     const [email, setEmail] = useState('');
     const [role, setRole] = useState('MEMBER');
     const [busy, setBusy] = useState(false);
+    const [requests, setRequests] = useState([]);
+
+    const loadRequests = useCallback(() => {
+        if (!canManage) return;
+        joinRequestApi.pending(societyId).then(setRequests).catch(() => setRequests([]));
+    }, [societyId, canManage]);
+    useEffect(() => { loadRequests(); }, [loadRequests]);
 
     const load = useCallback(() => {
         setError(null);
@@ -50,6 +58,12 @@ export default function MembersPage() {
 
     const changeRole = (m, newRole) => run(() => societyApi.updateMemberRole(societyId, m.userId, newRole));
 
+    const decide = (r, approve) => run(async () => {
+        if (approve) await joinRequestApi.approve(societyId, r.id);
+        else await joinRequestApi.decline(societyId, r.id);
+        await loadRequests();
+    });
+
     const remove = (m) => {
         if (!window.confirm(`Remove ${m.userFullName} from this society?`)) return;
         run(() => societyApi.removeMember(societyId, m.userId));
@@ -62,6 +76,24 @@ export default function MembersPage() {
         <>
             <h1 className="greet">Members</h1>
             <p className="muted greet-sub">{members.length} {members.length === 1 ? 'member' : 'members'} in this society.</p>
+
+            {canManage && requests.length > 0 && (
+                <section className="panel" style={{ marginBottom: 18 }}>
+                    <h2>Join requests ({requests.length})</h2>
+                    {requests.map((r) => (
+                        <div className="list-row" key={r.id}>
+                            <div>
+                                <strong>{r.userFullName}</strong>
+                                <small>{r.userEmail}{r.message ? ` · ${r.message}` : ''}</small>
+                            </div>
+                            <div className="actions-row" style={{ margin: 0 }}>
+                                <button type="button" className="btn-solid" disabled={busy} onClick={() => decide(r, true)}>Approve</button>
+                                <button type="button" className="btn-danger" disabled={busy} onClick={() => decide(r, false)}>Decline</button>
+                            </div>
+                        </div>
+                    ))}
+                </section>
+            )}
 
             {canManage && (
                 <form className="panel inline-form" onSubmit={add}>
