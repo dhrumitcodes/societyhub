@@ -15,7 +15,7 @@ export default function DashboardLayout() {
     if (!membership && !isAdmin) return <Navigate to="/" replace />;
 
     const section = pathname.split('/')[3] || 'overview';
-    const current = NAV.find((n) => n.to === section) ?? NAV[0];
+    const current = section === 'account' ? { label: 'Account' } : NAV.find((n) => n.to === section) ?? NAV[0];
     const societyName = membership?.societyName ?? 'Society';
     const initials = user.fullName.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
     const mark = societyName.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
@@ -50,6 +50,9 @@ export default function DashboardLayout() {
                         </NavLink>
                     ))}
                     <NavLink to="/discover" className="nav-item"><Icon name="search" />Explore</NavLink>
+                    <NavLink to={`/societies/${societyId}/account`} className={({ isActive }) => `nav-item ${isActive ? 'on' : ''}`}>
+                        <Icon name="set" />Account
+                    </NavLink>
                 </nav>
                 <button type="button" className="nav-item signout" onClick={() => { logout(); navigate('/login', { replace: true }); }}>
                     <Icon name="out" />Sign out

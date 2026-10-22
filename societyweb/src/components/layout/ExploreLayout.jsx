@@ -3,7 +3,6 @@ import { useAuth } from '../../context/AuthContext';
 import Icon from '../common/Icon';
 import Logo from '../common/Logo';
 
-
 export default function ExploreLayout() {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
@@ -24,6 +23,7 @@ export default function ExploreLayout() {
                     {first && (
                         <NavLink to={`/societies/${first.societyId}/overview`} className="nav-item"><Icon name="dash" />My society</NavLink>
                     )}
+                    <NavLink to="/discover/account" className={link}><Icon name="set" />Account</NavLink>
                 </nav>
                 <button type="button" className="nav-item signout" onClick={() => { logout(); navigate('/login', { replace: true }); }}>
                     <Icon name="out" />Sign out
