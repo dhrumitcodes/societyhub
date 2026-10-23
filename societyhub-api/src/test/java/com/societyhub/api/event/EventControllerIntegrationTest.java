@@ -55,7 +55,7 @@ class EventControllerIntegrationTest {
     }
 
     @Test
-    void createEvent_WithoutAuth_ReturnsForbidden() throws Exception {
+    void createEvent_WithoutAuth_ReturnsUnauthorized() throws Exception {
         EventRequest request = new EventRequest();
         request.setTitle("Build Drone");
         request.setDescription("Workshop");
@@ -66,6 +66,6 @@ class EventControllerIntegrationTest {
         mockMvc.perform(post("/api/v1/societies/" + savedSociety.getId() + "/events")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 }

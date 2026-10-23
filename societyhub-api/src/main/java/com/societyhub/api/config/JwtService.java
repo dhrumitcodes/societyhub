@@ -1,9 +1,11 @@
 package com.societyhub.api.config;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,28 @@ public class JwtService {
 
     @Value("${application.security.jwt.expiration}")
     private long jwtExpiration;
+
+    @PostConstruct
+    void validateConfiguration() {
+        if (secretKey == null || secretKey.isBlank()) {
+            throw new IllegalStateException(
+                    "The JWT secret is missing. Set the JWT_SECRET environment variable to a Base64 string "
+                            + "of at least 32 bytes. Generate one with: openssl rand -base64 48");
+        }
+        byte[] keyBytes;
+        try {
+            keyBytes = Decoders.BASE64.decode(secretKey);
+        } catch (RuntimeException e) {
+            throw new IllegalStateException("The JWT secret must be a valid Base64 string.", e);
+        }
+        if (keyBytes.length < 32) {
+            throw new IllegalStateException(
+                    "The JWT secret is too short. Use at least 32 bytes (256 bits), for example: openssl rand -base64 48");
+        }
+        if (jwtExpiration <= 0) {
+            throw new IllegalStateException("application.security.jwt.expiration must be a positive number of milliseconds.");
+        }
+    }
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -45,10 +69,13 @@ public class JwtService {
                 .signWith(getSignInKey())
                 .compact();
     }
-
     public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
+        try {
+            final String username = extractUsername(token);
+            return username.equals(userDetails.getUsername()) && !isTokenExpired(token);
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
     }
 
     private boolean isTokenExpired(String token) {
